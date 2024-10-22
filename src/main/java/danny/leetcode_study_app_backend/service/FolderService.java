@@ -33,4 +33,16 @@ public class FolderService {
     public void deleteFolder(Long id) {
         folderRepository.deleteById(id);
     }
+
+    public List<Folder> searchFoldersByPrefix(String prefix, String userId) {
+        return folderRepository.findByNameStartingWithAndUserId(prefix, userId);
+    }
+
+    public List<Folder> sortFoldersByName(String userId) {
+        return folderRepository.findAllByUserIdOrderByNameAsc(userId);
+    }
+
+    public List<Folder> sortFoldersByEditDate(String userId) {
+        return folderRepository.findAllByUserIdOrderByEditDateDesc(userId);
+    }
 }
