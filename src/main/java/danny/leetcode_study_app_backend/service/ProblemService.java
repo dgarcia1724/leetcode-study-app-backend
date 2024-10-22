@@ -52,6 +52,9 @@ public class ProblemService {
         problemRepository.delete(problem);
     }
 
+    // Work to do:
+    // 1. Update list and folder confidence percentage
+
     // Additional method to calculate list and folder confidence
     public void updateListAndFolderConfidence(Long listId) {
         // Logic to calculate and update list and folder confidence based on problems
