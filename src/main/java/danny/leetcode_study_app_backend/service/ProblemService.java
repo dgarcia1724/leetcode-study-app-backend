@@ -1,7 +1,9 @@
 package danny.leetcode_study_app_backend.service;
 
+import danny.leetcode_study_app_backend.entity.Folder;
 import danny.leetcode_study_app_backend.entity.ListEntity;
 import danny.leetcode_study_app_backend.entity.Problem;
+import danny.leetcode_study_app_backend.repository.FolderRepository;
 import danny.leetcode_study_app_backend.repository.ListRepository;
 import danny.leetcode_study_app_backend.repository.ProblemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class ProblemService {
     @Autowired
     private ListRepository listRepository;
 
+    @Autowired
+    private FolderRepository folderRepository;  // Add FolderRepository
+
     public List<Problem> getProblemsByListId(Long listId) {
         return problemRepository.findByListIdOrdered(listId);
     }
@@ -33,30 +38,68 @@ public class ProblemService {
         ListEntity list = listRepository.findById(listId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "List not found"));
         problem.setList(list);
-        return problemRepository.save(problem);
+        Problem savedProblem = problemRepository.save(problem);
+
+        // Update list and folder confidence after creating a new problem
+        updateListAndFolderConfidence(listId);
+
+        return savedProblem;
     }
 
     public Problem updateProblem(Long id, Problem problemDetails) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
+
+        // Update problem fields
         problem.setName(problemDetails.getName());
         problem.setConfidencePercentage(problemDetails.getConfidencePercentage());
         problem.setUrl(problemDetails.getUrl());
-        // Update other fields as necessary
-        return problemRepository.save(problem);
+
+        // Save the updated problem
+        problemRepository.save(problem);
+
+        // Update list and folder confidence
+        updateListAndFolderConfidence(problem.getList().getId());
+
+        return problem;
     }
 
     public void deleteProblem(Long id) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
+        Long listId = problem.getList().getId(); // Get the associated list ID before deleting
+
         problemRepository.delete(problem);
+
+        // Update list and folder confidence after deleting the problem
+        updateListAndFolderConfidence(listId);
     }
 
-    // Work to do:
-    // 1. Update list and folder confidence percentage
-
-    // Additional method to calculate list and folder confidence
+    // New method to calculate and update list and folder confidence
     public void updateListAndFolderConfidence(Long listId) {
-        // Logic to calculate and update list and folder confidence based on problems
+        // 1. Calculate the average confidence of problems in the list
+        List<Problem> problems = problemRepository.findByListIdOrdered(listId);
+        double totalConfidence = problems.stream().mapToDouble(Problem::getConfidencePercentage).sum();
+        double averageConfidence = problems.isEmpty() ? 0 : totalConfidence / problems.size();
+
+        // 2. Update list confidence
+        ListEntity list = listRepository.findById(listId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "List not found"));
+        list.setConfidencePercentage(averageConfidence);
+        listRepository.save(list);
+
+        // 3. Calculate the average confidence of lists in the folder
+        Folder folder = list.getFolder();
+        if (folder == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found");
+        }
+
+        List<ListEntity> lists = listRepository.findByFolderId(folder.getId());
+        double totalListConfidence = lists.stream().mapToDouble(ListEntity::getConfidencePercentage).sum();
+        double folderAverageConfidence = lists.isEmpty() ? 0 : totalListConfidence / lists.size();
+
+        // 4. Update folder confidence
+        folder.setConfidencePercentage(folderAverageConfidence);
+        folderRepository.save(folder);
     }
 }
