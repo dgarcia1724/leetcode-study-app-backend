@@ -36,7 +36,14 @@ public class ListService {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
         list.setFolder(folder);
-        return listRepository.save(list);
+
+        // Save the new list
+        ListEntity savedList = listRepository.save(list);
+
+        // Update folder confidence after adding a new list
+        updateFolderConfidence(folderId);
+
+        return savedList;
     }
 
     // Update an existing list
@@ -52,7 +59,25 @@ public class ListService {
     public void deleteList(Long id) {
         ListEntity list = listRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "List not found"));
+        Long folderId = list.getFolder().getId(); // Get folder ID before deleting the list
+
         listRepository.delete(list);
+
+        // Update folder confidence after deleting a list
+        updateFolderConfidence(folderId);
+    }
+
+    // New method to update folder confidence percentage
+    private void updateFolderConfidence(Long folderId) {
+        List<ListEntity> lists = listRepository.findByFolderId(folderId);
+        double totalConfidence = lists.stream().mapToDouble(ListEntity::getConfidencePercentage).sum();
+        double averageConfidence = lists.isEmpty() ? 0 : totalConfidence / lists.size();
+
+        // Update folder confidence
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
+        folder.setConfidencePercentage(averageConfidence);
+        folderRepository.save(folder);
     }
 
     // Search lists by name prefix within a specific folder

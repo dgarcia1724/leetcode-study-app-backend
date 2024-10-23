@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/folders/{folderId}/lists")
+@CrossOrigin(origins = "*")
 public class ListController {
 
     @Autowired

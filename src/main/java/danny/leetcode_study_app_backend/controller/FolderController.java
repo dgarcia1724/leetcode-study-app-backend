@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users/{userId}/folders")
+@CrossOrigin(origins = "*")
 public class FolderController {
 
     @Autowired
