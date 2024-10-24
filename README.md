@@ -14,3 +14,10 @@ Users can securely authenticate with email/password or Google accounts, enabling
 - **Other:** Firebase Firestore, Toast notifications (for user feedback)
 
 This app combines simplicity with efficient data organization, providing a clean, intuitive interface for study management.
+
+## Design Tools
+
+- **Figma:** The User Interface of the app was designed using Figma, allowing for an intuitive user experience and responsive layouts. Additionally, the database schema was crafted in Figma to ensure a clear and efficient data structure, facilitating smooth backend integration.
+
+![Project Picture](images/FigmaUserInterface.png)
+![Project Picture](images/FigmaDataBaseSchema.png)
