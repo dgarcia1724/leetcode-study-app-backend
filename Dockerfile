@@ -4,9 +4,16 @@ FROM openjdk:17-jdk-slim as builder
 # Set the working directory in the container
 WORKDIR /app
 
+# Convert line endings to LF
+RUN apt-get update && apt-get install -y dos2unix
+
 # Copy the Maven pom.xml and other necessary files to build the project
 COPY pom.xml .
 COPY src ./src
+COPY mvnw .
+
+RUN dos2unix mvnw
+RUN chmod +x mvnw
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
