@@ -8,10 +8,11 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y dos2unix
 
 # Copy the Maven pom.xml, .mvn folder, and other necessary files to build the project
-COPY pom.xml . 
-COPY .mvn .mvn # This line copies the .mvn folder
+COPY pom.xml .
+COPY .mvn .mvn
 COPY src ./src
 COPY mvnw .
+COPY mvnw.cmd .
 
 # Convert mvnw line endings and ensure it is executable
 RUN dos2unix mvnw
