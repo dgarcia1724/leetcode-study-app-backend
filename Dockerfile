@@ -12,7 +12,8 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
 # Second stage: create a smaller image for the runtime
-FROM openjdk:17-jre-slim
+FROM openjdk:17-slim
+
 
 # Set the working directory
 WORKDIR /app
