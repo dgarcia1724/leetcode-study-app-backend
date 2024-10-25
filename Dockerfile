@@ -1,37 +1,36 @@
-# Use a base image that includes JDK
-FROM openjdk:17-jdk-slim as builder
+# Use OpenJDK 21 as the base image for building
+FROM openjdk:21-jdk-slim as builder
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Convert line endings to LF
-RUN apt-get update && apt-get install -y dos2unix
-
-# Copy the Maven pom.xml, .mvn folder, and other necessary files to build the project
+# Copy the Maven configuration and source code
 COPY pom.xml .
 COPY .mvn .mvn
 COPY src ./src
 COPY mvnw .
 COPY mvnw.cmd .
 
-# Convert mvnw line endings and ensure it is executable
-RUN dos2unix mvnw
-RUN chmod +x mvnw
+# Install necessary tools
+RUN apt-get update && apt-get install -y dos2unix
+
+# Ensure line endings are correct and grant execution permission
+RUN dos2unix mvnw && chmod +x mvnw
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Second stage: create a smaller image for the runtime
-FROM openjdk:17-slim
+# Use a lighter image for runtime
+FROM openjdk:21
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the jar file from the builder stage
-COPY --from=builder /app/target/leetcode_study_app_backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy the built jar file
+COPY --from=builder /app/target/*.jar app.jar
 
 # Expose the port your application will run on
 EXPOSE 8080
 
-# Define the command to run your application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Command to run the application
+CMD ["java", "-jar", "app.jar"]
