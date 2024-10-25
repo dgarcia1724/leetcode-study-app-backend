@@ -7,11 +7,13 @@ WORKDIR /app
 # Convert line endings to LF
 RUN apt-get update && apt-get install -y dos2unix
 
-# Copy the Maven pom.xml and other necessary files to build the project
-COPY pom.xml .
+# Copy the Maven pom.xml, .mvn folder, and other necessary files to build the project
+COPY pom.xml . 
+COPY .mvn .mvn # This line copies the .mvn folder
 COPY src ./src
 COPY mvnw .
 
+# Convert mvnw line endings and ensure it is executable
 RUN dos2unix mvnw
 RUN chmod +x mvnw
 
@@ -20,7 +22,6 @@ RUN ./mvnw clean package -DskipTests
 
 # Second stage: create a smaller image for the runtime
 FROM openjdk:17-slim
-
 
 # Set the working directory
 WORKDIR /app
